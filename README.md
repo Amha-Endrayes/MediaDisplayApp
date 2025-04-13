@@ -121,5 +121,5 @@ This project is open source and available under the [MIT License](LICENSE).
 
 - Built with [Flask](https://flask.palletsprojects.com/) and [Bootstrap](https://getbootstrap.com/).
 - Inspired by modern web design principles to provide a sleek and professional media display experience.
-```
+
 
