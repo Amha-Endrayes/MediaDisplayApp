@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1>Admin Dashboard</h1>
+  
+  <div class="row">
+    <div class="col-md-6">
+      <h2>Connected Devices</h2>
+      <div class="list-group">
+        {% for ip, device in devices.items() %}
+          <div class="list-group-item">
+            <strong>{{ ip }}</strong>
+            <span class="text-muted">Last seen: {{ device.last_seen.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="col-md-6">
+      <h2>Slideshow Settings</h2>
+      <form action="{{ url_for('update_slideshow') }}" method="post">
+        <div class="form-group">
+          <label for="delay">Delay (seconds):</label>
+          <input type="number" name="delay" id="delay" class="form-control" value="{{ slideshow_settings.delay // 1000 }}">
+        </div>
+        <div class="form-group form-check">
+          <input type="checkbox" class="form-check-input" id="paused" name="paused" {% if slideshow_settings.paused %}checked{% endif %}>
+          <label class="form-check-label" for="paused">Pause Slideshow</label>
+        </div>
+        <button type="submit" class="btn btn-primary">Update Settings</button>
+      </form>
+    </div>
+  </div>
+  
+  <hr>
+  
+  <div class="mb-3">
+    <a href="{{ url_for('upload_media') }}" class="btn btn-success">Upload Media</a>
+    <a href="{{ url_for('display') }}" class="btn btn-secondary">View Display</a>
+  </div>
+  
+  <h2>Media Files</h2>
+  <div class="scrollable-container">
+    <div class="row">
+      {% for file in media_files %}
+        <div class="col-md-3 mb-3">
+          <div class="card">
+            {% if file.endswith(('jpg', 'jpeg', 'png', 'gif')) %}
+              <img src="{{ url_for('media', filename=file) }}" class="card-img-top" alt="{{ file }}">
+            {% else %}
+              <video class="card-img-top" controls>
+                <source src="{{ url_for('media', filename=file) }}" type="video/mp4">
+                Your browser does not support the video tag.
+              </video>
+            {% endif %}
+            <div class="card-body text-center">
+              <p class="card-text">{{ file }}</p>
+              <!-- Remove button -->
+              <form action="{{ url_for('delete_file', filename=file) }}" method="post" style="display: inline;">
+                <button type="submit" class="btn btn-danger btn-sm">Remove</button>
+              </form>
+              <!-- Update/Replace button for images only -->
+              {% if file.endswith(('jpg', 'jpeg', 'png', 'gif')) %}
+                <a href="{{ url_for('update_file', filename=file) }}" class="btn btn-warning btn-sm">Update/Replace</a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+{% endblock %}

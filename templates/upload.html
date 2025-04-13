@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+  <h1 class="mt-4 mb-3">Upload Media</h1>
+  
+  <!-- Single form wraps both the drag-and-drop area and the upload button -->
+  <form id="uploadForm" method="post" action="{{ url_for('upload_media') }}" enctype="multipart/form-data">
+    <!-- Drag and drop area -->
+    <div id="upload-area" class="border border-primary rounded p-5 text-center" style="cursor: pointer;">
+      <p class="lead">Drag &amp; Drop a file here or click to select</p>
+      <!-- Hidden file input is now inside the form -->
+      <input type="file" id="fileInput" name="file" style="display: none;">
+      <div id="filePreview" class="mt-3"></div>
+    </div>
+    
+    <button type="submit" class="btn btn-success mt-3" id="uploadBtn" disabled>Upload</button>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary mt-3">Cancel</a>
+  </form>
+</div>
+
+<script>
+  // Get the elements we need.
+  const uploadArea = document.getElementById("upload-area");
+  const fileInput = document.getElementById("fileInput");
+  const filePreview = document.getElementById("filePreview");
+  const uploadBtn = document.getElementById("uploadBtn");
+
+  // When the upload area is clicked, open the file dialog.
+  uploadArea.addEventListener("click", () => {
+    fileInput.click();
+  });
+
+  // Function to handle the selected file.
+  function handleFile(file) {
+    // Clear any existing preview.
+    filePreview.innerHTML = "";
+    
+    // Display the file name.
+    const fileInfo = document.createElement("p");
+    fileInfo.textContent = "Selected file: " + file.name;
+    filePreview.appendChild(fileInfo);
+    
+    // If the file is an image, display a smaller preview.
+    if (file.type.startsWith("image/")) {
+      const imgPreview = document.createElement("img");
+      imgPreview.src = URL.createObjectURL(file);
+      // Limit the size of the preview image.
+      imgPreview.style.maxWidth = "200px";
+      imgPreview.style.height = "auto";
+      imgPreview.className = "img-thumbnail mt-2";
+      filePreview.appendChild(imgPreview);
+    }
+
+    // Enable the upload button since a file is selected.
+    uploadBtn.disabled = false;
+  }
+
+  // Event: When a file is selected from the file dialog.
+  fileInput.addEventListener("change", () => {
+    if (fileInput.files.length > 0) {
+      handleFile(fileInput.files[0]);
+    }
+  });
+
+  // Prevent default behaviors for drag and drop events.
+  ["dragenter", "dragover", "dragleave", "drop"].forEach(eventName => {
+    uploadArea.addEventListener(eventName, e => {
+      e.preventDefault();
+      e.stopPropagation();
+    });
+  });
+  
+  // Highlight the drop area when a file is dragged over it.
+  ["dragenter", "dragover"].forEach(eventName => {
+    uploadArea.addEventListener(eventName, () => {
+      uploadArea.classList.add("bg-light");
+    });
+  });
+  
+  // Remove highlight when the file is dragged away or dropped.
+  ["dragleave", "drop"].forEach(eventName => {
+    uploadArea.addEventListener(eventName, () => {
+      uploadArea.classList.remove("bg-light");
+    });
+  });
+
+  // Handle file drop event.
+  uploadArea.addEventListener("drop", e => {
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      // Set the file input's files property so form submission sends the file.
+      fileInput.files = e.dataTransfer.files;
+      handleFile(e.dataTransfer.files[0]);
+      e.dataTransfer.clearData();
+    }
+  });
+</script>
+{% endblock %}

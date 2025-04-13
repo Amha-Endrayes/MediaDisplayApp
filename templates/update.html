@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1>Update/Replace Media</h1>
+  <p>Updating: {{ old_filename }}</p>
+  <form action="{{ url_for('update_file', filename=old_filename) }}" method="post" enctype="multipart/form-data">
+    <div class="form-group">
+      <label for="file">Choose new file:</label>
+      <input type="file" name="file" id="file" class="form-control-file">
+    </div>
+    <button type="submit" class="btn btn-primary">Update</button>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Cancel</a>
+  </form>
+{% endblock %}

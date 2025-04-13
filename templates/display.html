@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Display</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    body {
+      background-color: black;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+    #slideshow-container {
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    #slideImage {
+      max-width: 100%;
+      max-height: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div id="slideshow-container">
+    <!-- The slideshow image element will be injected by JavaScript -->
+  </div>
+  
+  <script>
+    // Initial build of the slides array (only images).
+    var slides = [
+      {% for file in media_files %}
+        {% if file.endswith(('jpg', 'jpeg', 'png', 'gif')) %}
+          "{{ url_for('media', filename=file) }}",
+        {% endif %}
+      {% endfor %}
+    ];
+    var currentIndex = 0;
+    var timeoutId;
+    // Base URL to prepend to file names when updating the slides array.
+    var mediaBaseURL = "{{ url_for('media', filename='') }}";
+
+    function showSlide(index) {
+      var container = document.getElementById('slideshow-container');
+      container.innerHTML = "";
+      var img = document.createElement('img');
+      img.id = 'slideImage';
+      img.src = slides[index];
+      container.appendChild(img);
+    }
+
+    function nextSlide() {
+      // Fetch the current slideshow settings.
+      fetch("{{ url_for('api_settings') }}")
+        .then(response => response.json())
+        .then(settings => {
+          if (!settings.paused) {
+            currentIndex = (currentIndex + 1) % slides.length;
+            showSlide(currentIndex);
+          }
+          scheduleNextSlide(settings.delay);
+        });
+    }
+
+    function scheduleNextSlide(delay) {
+      if (timeoutId) clearTimeout(timeoutId);
+      timeoutId = setTimeout(nextSlide, delay);
+    }
+
+    // New function to check for uploaded images without refreshing the page.
+    function updateSlides() {
+      fetch("{{ url_for('api_media') }}")
+        .then(response => response.json())
+        .then(media => {
+          // Filter only image files.
+          var newSlides = media.filter(function(file) {
+            return file.match(/\.(jpe?g|png|gif)$/i);
+          }).map(function(file) {
+            return mediaBaseURL + file;
+          });
+          // Update slides if there is any change.
+          if (JSON.stringify(newSlides) !== JSON.stringify(slides)) {
+            slides = newSlides;
+            if (currentIndex >= slides.length) {
+              currentIndex = 0;
+            }
+            showSlide(currentIndex);
+          }
+        });
+    }
+        window.onload = function() {
+      if (slides.length > 0) {
+        showSlide(currentIndex);
+        // Fetch settings and start the slideshow.
+        fetch("{{ url_for('api_settings') }}")
+          .then(response => response.json())
+          .then(settings => {
+            scheduleNextSlide(settings.delay);
+          });
+        // Poll for new images every 5 seconds.
+        setInterval(updateSlides, 5000);
+      }
+    };
+  </script>
+</body>
+</html>
